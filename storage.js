@@ -102,6 +102,7 @@ export function createStorage(options = {}) {
     } else if (setStatus) {
       setStatus("Saved locally in your browser.");
     }
+    notifyDataChanged();
   }
 
   function applyImportedData(raw, sourceLabel) {

@@ -89,7 +89,7 @@ export function createModal(dom) {
 
     refs.detail.innerHTML = `
       <div class="modal-section">
-        <div class="modal-label">${quest.course || "(No course)"} · ${quest.category || "Uncategorized"}</div>
+        <div class="modal-label">${quest.course || "(No course)"} / ${quest.category || "Uncategorized"}</div>
         <div class="modal-row">
           <span>${dueLabel}</span>
           ${quest.estMinutes ? `<span>Est: ${quest.estMinutes} min</span>` : ""}

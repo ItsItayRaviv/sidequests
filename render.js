@@ -1,5 +1,15 @@
 import { daysUntil, ensureDefaults, formatDue, state } from "./state.js";
 
+function dateSortValue(dateString) {
+  if (!dateString) return Number.POSITIVE_INFINITY;
+  const time = new Date(dateString).getTime();
+  return Number.isNaN(time) ? Number.POSITIVE_INFINITY : time;
+}
+
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+
 function renderCourseSelect(dom, state) {
   const inUse = state.quests.map((a) => a.course).filter(Boolean);
   const options = Array.from(new Set([...state.courses, ...inUse]));
@@ -105,7 +115,7 @@ function buildQuestCard(quest, index, actions) {
 function renderList(dom, state, actions) {
   const sorted = state.quests
     .map((item, originalIndex) => ({ item, originalIndex }))
-    .sort((a, b) => new Date(a.item.dueDate || 0) - new Date(b.item.dueDate || 0));
+    .sort((a, b) => dateSortValue(a.item.dueDate) - dateSortValue(b.item.dueDate));
 
   dom.listEl.innerHTML = "";
 
@@ -166,20 +176,23 @@ function renderCalendar(dom, state, actions, modal) {
 
   const tasksByDate = state.quests.reduce((acc, item, index) => {
     if (!item.dueDate) return acc;
-    acc[item.dueDate] = acc[item.dueDate] || [];
-    acc[item.dueDate].push({ quest: item, index });
+    const date = new Date(item.dueDate);
+    if (Number.isNaN(date)) return acc;
+    const key = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    acc[key] = acc[key] || [];
+    acc[key].push({ quest: item, index });
     return acc;
   }, {});
 
   dom.calendarGrid.innerHTML = "";
   for (let i = 0; i < startDay; i++) {
-    const pad = document.createElement("div");
-    dom.calendarGrid.appendChild(pad);
+    const spacer = document.createElement("div");
+    dom.calendarGrid.appendChild(spacer);
   }
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
-    const iso = date.toISOString().split("T")[0];
+    const iso = `${year}-${pad(month + 1)}-${pad(day)}`;
     const cell = document.createElement("div");
     cell.className = "cal-cell";
     if (date.getTime() === today.getTime()) cell.classList.add("today");

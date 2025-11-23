@@ -2,11 +2,12 @@ export function bindEvents({ dom, actions, storage }) {
   if (dom.form) {
     dom.form.addEventListener("submit", (event) => {
       event.preventDefault();
+      const estMinutesValue = dom.fields.estMinutes.value.trim();
       actions.addQuest({
         course: dom.courseSelect.value,
         category: dom.categorySelect.value,
         dueDate: dom.fields.dueDate.value,
-        estMinutes: dom.fields.estMinutes.value.trim(),
+        estMinutes: estMinutesValue ? Number(estMinutesValue) : null,
         link: dom.fields.link.value.trim(),
         filePath: dom.fields.filePath.value.trim(),
         notes: dom.fields.notes.value.trim(),

@@ -25,10 +25,16 @@ export function ensureDefaults(current = state) {
 }
 
 export function withDefaults(quest) {
+  const parsedCompletion = Number(quest?.completion);
+  const completion = Number.isFinite(parsedCompletion) ? Math.max(0, Math.min(100, parsedCompletion)) : 0;
+  const parsedMinutes = Number(quest?.estMinutes);
+  const estMinutes = Number.isFinite(parsedMinutes) && parsedMinutes > 0 ? Math.round(parsedMinutes) : null;
+
   return {
-    completion: Number.isFinite(Number(quest?.completion)) ? Number(quest.completion) : 0,
-    done: Boolean(quest?.done),
     ...quest,
+    completion,
+    estMinutes,
+    done: Boolean(quest?.done),
   };
 }
 
