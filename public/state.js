@@ -51,6 +51,20 @@ export function ensureDefaults(current = state) {
     };
   }
 
+  if (!current.calendar) {
+    const now = new Date();
+    current.calendar = {
+      month: now.getMonth(),
+      year: now.getFullYear(),
+      view: current.preferences.defaultCalendarView || "month",
+      courseFilter: "all",
+    };
+  }
+  if (typeof current.calendar.month !== "number") current.calendar.month = new Date().getMonth();
+  if (typeof current.calendar.year !== "number") current.calendar.year = new Date().getFullYear();
+  if (!current.calendar.view) current.calendar.view = current.preferences.defaultCalendarView || "month";
+  if (!current.calendar.courseFilter) current.calendar.courseFilter = "all";
+
   if (!current.courses.length) current.courses = ["General"];
   if (!current.categories.length) current.categories = ["General"];
   current.courses = Array.from(new Set(current.courses));
@@ -66,8 +80,6 @@ export function ensureDefaults(current = state) {
     current.ui.questFilters = { courses: [], status: "All", sort: "date" };
   }
   if (!current.subtasks) current.subtasks = {};
-  if (!current.calendar.view) current.calendar.view = current.preferences.defaultCalendarView || "month";
-  if (!current.calendar.courseFilter) current.calendar.courseFilter = "all";
 }
 
 export function withDefaults(quest) {
