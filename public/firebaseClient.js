@@ -1,7 +1,7 @@
 const FIREBASE_VERSION = "10.13.1";
 
-import { initializeApp } from `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-app.js`;
-import { getFirestore } from `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/firebase-firestore.js`;
+import { initializeApp } from `https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js`;
+import { getFirestore } from `https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js`;
 
 function readConfigFromDom() {
   const script = document.getElementById("firebase-config");
