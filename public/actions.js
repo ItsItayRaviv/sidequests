@@ -1,31 +1,33 @@
-import { ensureDefaults, shiftCalendar, state, withDefaults } from "./state.js";
+import { ensureDefaults, shiftCalendar, state, todayISO, withDefaults } from "./state.js";
 import { renderAll } from "./render.js";
+
+const questIndex = (questRef) =>
+  typeof questRef === "number" ? questRef : state.quests.findIndex((q) => q.id === questRef);
 
 export function createActions({ storage, dom, setSummary, modal, setStatus }) {
   const actions = {};
 
   function refresh() {
+    ensureDefaults(state);
     renderAll(dom, state, actions, setSummary, modal);
   }
 
-  function clearForm() {
-    if (dom.form) dom.form.reset();
-    if (dom.courseSelect) dom.courseSelect.focus();
-  }
-
-  async function addQuest(quest) {
+  async function addQuest(quest, { onSaved } = {}) {
     const base = withDefaults({ ...quest, reward: quest.reward || { sx: 0, coins: 0 } });
     try {
       if (setStatus) setStatus("Saving quest to Firebase...");
       const saved = await storage.addQuest(base);
-      state.quests.push(withDefaults(saved));
+      const normalized = withDefaults(saved);
+      state.quests.push(normalized);
       ensureDefaults(state);
-      clearForm();
       refresh();
+      if (typeof onSaved === "function") onSaved(normalized);
       if (setStatus) setStatus("Quest saved to Firebase.");
+      return normalized;
     } catch (error) {
       console.error("Failed to add quest", error);
       if (setStatus) setStatus("Could not save quest to Firebase.");
+      return null;
     }
   }
 
@@ -65,7 +67,9 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     }
   }
 
-  async function updateQuest(index, changes) {
+  async function updateQuest(questRef, changes) {
+    const index = questIndex(questRef);
+    if (index < 0) return;
     const existing = state.quests[index];
     if (!existing) return;
     const updated = withDefaults({ ...existing, ...changes });
@@ -85,7 +89,9 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     }
   }
 
-  async function removeQuest(index) {
+  async function removeQuest(questRef) {
+    const index = questIndex(questRef);
+    if (index < 0) return;
     const [removed] = state.quests.splice(index, 1);
     refresh();
     if (!removed) return;
@@ -132,8 +138,97 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     }
   }
 
+  function focusDay(dateString) {
+    const target = dateString || todayISO();
+    state.ui.selectedDate = target;
+    const parsed = new Date(target);
+    if (!Number.isNaN(parsed.getTime())) {
+      state.calendar.month = parsed.getMonth();
+      state.calendar.year = parsed.getFullYear();
+    }
+    const tasks = state.quests.filter((q) => q.dueDate === target);
+    if (tasks.length && state.ui.detailMode !== "new") {
+      state.ui.selectedQuestId = tasks[0].id;
+      state.ui.detailMode = "view";
+    } else if (!tasks.length) {
+      state.ui.selectedQuestId = null;
+    }
+    refresh();
+  }
+
+  function setDayFilter(value) {
+    state.ui.dayFilter = value;
+    refresh();
+  }
+
+  function selectQuest(questId) {
+    state.ui.selectedQuestId = questId;
+    state.ui.detailMode = "view";
+    refresh();
+  }
+
+  function startNewQuestForDate(dateString) {
+    state.ui.selectedDate = dateString || state.ui.selectedDate || todayISO();
+    state.ui.detailMode = "new";
+    state.ui.selectedQuestId = null;
+    refresh();
+  }
+
+  function jumpToToday() {
+    const iso = todayISO();
+    const todayDate = new Date(iso);
+    state.calendar.month = todayDate.getMonth();
+    state.calendar.year = todayDate.getFullYear();
+    focusDay(iso);
+  }
+
   function setCalendarMonth(delta) {
+    const currentSelected = state.ui.selectedDate ? new Date(state.ui.selectedDate) : null;
+    const fallbackDay = currentSelected?.getDate() || 1;
     shiftCalendar(state, delta);
+    const daysInTarget = new Date(state.calendar.year, state.calendar.month + 1, 0).getDate();
+    const targetDay = Math.min(fallbackDay, daysInTarget);
+    const nextDate = new Date(state.calendar.year, state.calendar.month, targetDay);
+    state.ui.selectedDate = nextDate.toISOString().split("T")[0];
+    refresh();
+  }
+
+  function setCalendarView(mode) {
+    state.calendar.view = mode;
+    refresh();
+  }
+
+  function setCalendarCourseFilter(value) {
+    state.calendar.courseFilter = value;
+    refresh();
+  }
+
+  function switchView(id) {
+    state.ui.activeView = id;
+    if (id !== "questsView") state.ui.drawerQuestId = null;
+    refresh();
+  }
+
+  function setQuestFilters(partial) {
+    state.ui.questFilters = { ...state.ui.questFilters, ...partial };
+    refresh();
+  }
+
+  function openDrawer(questId) {
+    state.ui.drawerQuestId = questId;
+    refresh();
+  }
+
+  function closeDrawer() {
+    state.ui.drawerQuestId = null;
+    refresh();
+  }
+
+  function updatePreference(key, value) {
+    state.preferences[key] = value;
+    if (key === "defaultCalendarView") {
+      state.calendar.view = value;
+    }
     refresh();
   }
 
@@ -141,11 +236,23 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     addCategory,
     addCourse,
     addQuest,
+    closeDrawer,
+    focusDay,
+    jumpToToday,
+    openDrawer,
     refresh,
     removeCategory,
     removeCourse,
     removeQuest,
+    selectQuest,
+    setCalendarCourseFilter,
     setCalendarMonth,
+    setCalendarView,
+    setDayFilter,
+    setQuestFilters,
+    startNewQuestForDate,
+    switchView,
+    updatePreference,
     updateQuest,
   });
 

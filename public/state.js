@@ -9,13 +9,36 @@ export const state = {
   quests: [],
   courses: [],
   categories: [],
+  subtasks: {},
   userId: null,
   fileHandle: null,
   calendar: {
     month: new Date().getMonth(),
     year: new Date().getFullYear(),
+    view: "month",
+    courseFilter: "all",
   },
   calendarSelection: {},
+  ui: {
+    activeView: "homeView",
+    selectedDate: null,
+    selectedQuestId: null,
+    dayFilter: "all",
+    detailMode: "view",
+    newQuestDraft: null,
+    drawerQuestId: null,
+    questFilters: {
+      courses: [],
+      status: "All",
+      sort: "date",
+    },
+  },
+  preferences: {
+    showHeatmap: true,
+    showProgressRing: true,
+    showCompletionCheck: true,
+    defaultCalendarView: "month",
+  },
 };
 
 export function ensureDefaults(current = state) {
@@ -23,6 +46,27 @@ export function ensureDefaults(current = state) {
   if (!current.categories.length) current.categories = ["General"];
   current.courses = Array.from(new Set(current.courses));
   current.categories = Array.from(new Set(current.categories));
+
+  if (!current.ui) {
+    current.ui = { activeView: "homeView" };
+  }
+  if (!current.ui.activeView) current.ui.activeView = "homeView";
+  if (!current.ui.selectedDate) current.ui.selectedDate = todayISO();
+  if (!current.ui.dayFilter) current.ui.dayFilter = "all";
+  if (!current.ui.questFilters) {
+    current.ui.questFilters = { courses: [], status: "All", sort: "date" };
+  }
+  if (!current.subtasks) current.subtasks = {};
+  if (!current.calendar.view) current.calendar.view = current.preferences.defaultCalendarView || "month";
+  if (!current.calendar.courseFilter) current.calendar.courseFilter = "all";
+  if (!current.preferences) {
+    current.preferences = {
+      showHeatmap: true,
+      showProgressRing: true,
+      showCompletionCheck: true,
+      defaultCalendarView: "month",
+    };
+  }
 }
 
 export function withDefaults(quest) {
@@ -34,11 +78,15 @@ export function withDefaults(quest) {
     sx: Number.isFinite(Number(quest?.reward?.sx)) ? Number(quest.reward.sx) : 0,
     coins: Number.isFinite(Number(quest?.reward?.coins)) ? Number(quest.reward.coins) : 0,
   };
+  const title = typeof quest?.title === "string" ? quest.title : "";
+  const dueTime = typeof quest?.dueTime === "string" ? quest.dueTime : "";
 
   return {
     ...quest,
     completion,
     estMinutes,
+    title,
+    dueTime,
     done: Boolean(quest?.done),
     reward,
   };
@@ -88,4 +136,10 @@ export function shiftCalendar(current = state, delta) {
     current.calendar.month = 0;
     current.calendar.year += 1;
   }
+}
+
+export function todayISO() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.toISOString().split("T")[0];
 }

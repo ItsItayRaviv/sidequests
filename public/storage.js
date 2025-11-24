@@ -88,9 +88,11 @@ export function createStorage({ setStatus } = {}) {
       const progress = progressById[docSnap.id] || {};
       return withDefaults({
         id: docSnap.id,
+        title: data.title || data.category || "",
         course: data.course || "General",
         category: data.category || "General",
         dueDate: toDateString(data.dueDate),
+        dueTime: data.dueTime || "",
         estMinutes: data.estMinutes ?? null,
         link: data.link || "",
         filePath: data.filePath || "",
@@ -108,9 +110,11 @@ export function createStorage({ setStatus } = {}) {
     const now = serverTimestamp();
     const reward = normalizeReward(quest.reward);
     const definition = {
+      title: quest.title || quest.category || "Quest",
       course: quest.course || "General",
       category: quest.category || "General",
       dueDate: toTimestamp(quest.dueDate),
+      dueTime: quest.dueTime || "",
       estMinutes: quest.estMinutes ?? null,
       link: quest.link || "",
       filePath: quest.filePath || "",
