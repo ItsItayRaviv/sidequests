@@ -42,6 +42,15 @@ export const state = {
 };
 
 export function ensureDefaults(current = state) {
+  if (!current.preferences) {
+    current.preferences = {
+      showHeatmap: true,
+      showProgressRing: true,
+      showCompletionCheck: true,
+      defaultCalendarView: "month",
+    };
+  }
+
   if (!current.courses.length) current.courses = ["General"];
   if (!current.categories.length) current.categories = ["General"];
   current.courses = Array.from(new Set(current.courses));
@@ -59,14 +68,6 @@ export function ensureDefaults(current = state) {
   if (!current.subtasks) current.subtasks = {};
   if (!current.calendar.view) current.calendar.view = current.preferences.defaultCalendarView || "month";
   if (!current.calendar.courseFilter) current.calendar.courseFilter = "all";
-  if (!current.preferences) {
-    current.preferences = {
-      showHeatmap: true,
-      showProgressRing: true,
-      showCompletionCheck: true,
-      defaultCalendarView: "month",
-    };
-  }
 }
 
 export function withDefaults(quest) {
