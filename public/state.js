@@ -9,6 +9,7 @@ export const state = {
   quests: [],
   courses: [],
   categories: [],
+  userId: null,
   fileHandle: null,
   calendar: {
     month: new Date().getMonth(),
@@ -29,12 +30,17 @@ export function withDefaults(quest) {
   const completion = Number.isFinite(parsedCompletion) ? Math.max(0, Math.min(100, parsedCompletion)) : 0;
   const parsedMinutes = Number(quest?.estMinutes);
   const estMinutes = Number.isFinite(parsedMinutes) && parsedMinutes > 0 ? Math.round(parsedMinutes) : null;
+  const reward = {
+    sx: Number.isFinite(Number(quest?.reward?.sx)) ? Number(quest.reward.sx) : 0,
+    coins: Number.isFinite(Number(quest?.reward?.coins)) ? Number(quest.reward.coins) : 0,
+  };
 
   return {
     ...quest,
     completion,
     estMinutes,
     done: Boolean(quest?.done),
+    reward,
   };
 }
 

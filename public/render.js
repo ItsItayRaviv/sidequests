@@ -88,6 +88,11 @@ function buildQuestCard(quest, index, actions) {
     <span class="pill">${quest.category || "Uncategorized"}</span>
     <span>Est: ${quest.estMinutes || "?"} min</span>
     <span>Completion: ${quest.completion || 0}%</span>
+    ${
+      quest.reward && (quest.reward.sx || quest.reward.coins)
+        ? `<span>Reward: ${quest.reward.sx || 0} sx / ${quest.reward.coins || 0} coins</span>`
+        : ""
+    }
     ${quest.filePath ? `<span>File: ${quest.filePath}</span>` : ""}
     ${
       quest.link

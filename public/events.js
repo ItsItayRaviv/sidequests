@@ -1,56 +1,49 @@
-export function bindEvents({ dom, actions, storage }) {
+export function bindEvents({ dom, actions }) {
   if (dom.form) {
-    dom.form.addEventListener("submit", (event) => {
+    dom.form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const estMinutesValue = dom.fields.estMinutes.value.trim();
-      actions.addQuest({
-        course: dom.courseSelect.value,
-        category: dom.categorySelect.value,
-        dueDate: dom.fields.dueDate.value,
-        estMinutes: estMinutesValue ? Number(estMinutesValue) : null,
-        link: dom.fields.link.value.trim(),
-        filePath: dom.fields.filePath.value.trim(),
-        notes: dom.fields.notes.value.trim(),
-        completion: 0,
-        done: false,
-      });
+      try {
+        await actions.addQuest({
+          course: dom.courseSelect.value,
+          category: dom.categorySelect.value,
+          dueDate: dom.fields.dueDate.value,
+          estMinutes: estMinutesValue ? Number(estMinutesValue) : null,
+          link: dom.fields.link.value.trim(),
+          filePath: dom.fields.filePath.value.trim(),
+          notes: dom.fields.notes.value.trim(),
+          completion: 0,
+          done: false,
+        });
+      } catch (error) {
+        console.error("Could not save quest", error);
+        alert("Could not save quest to Firebase. Please try again.");
+      }
     });
   }
 
   if (dom.courseForm) {
-    dom.courseForm.addEventListener("submit", (event) => {
+    dom.courseForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      actions.addCourse(dom.courseInput.value);
-      dom.courseInput.value = "";
+      try {
+        await actions.addCourse(dom.courseInput.value);
+        dom.courseInput.value = "";
+      } catch (error) {
+        console.error("Could not add course", error);
+      }
     });
   }
 
   if (dom.categoryForm) {
-    dom.categoryForm.addEventListener("submit", (event) => {
+    dom.categoryForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      actions.addCategory(dom.categoryInput.value);
-      dom.categoryInput.value = "";
+      try {
+        await actions.addCategory(dom.categoryInput.value);
+        dom.categoryInput.value = "";
+      } catch (error) {
+        console.error("Could not add category", error);
+      }
     });
-  }
-
-  if (dom.loadBtn) {
-    dom.loadBtn.addEventListener("click", () => {
-      storage.loadDataFromDisk().catch(() => {
-        alert("Could not open that file. Please try again with a JSON file.");
-      });
-    });
-  }
-
-  if (dom.saveBtn) {
-    dom.saveBtn.addEventListener("click", () => {
-      storage.saveDataToFile().catch(() => {
-        alert("Could not save to file. The browser may have blocked access.");
-      });
-    });
-  }
-
-  if (dom.filePicker) {
-    dom.filePicker.addEventListener("change", (event) => storage.handleFilePicker(event));
   }
 
   dom.tabs.forEach((tab) => {

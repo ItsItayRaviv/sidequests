@@ -5,11 +5,7 @@ const layout = `
       <div>
         <h1>Quest Planner</h1>
         <p class="lead">Home = calendar, Quests = tasks, Settings = courses & categories.</p>
-        <p class="status" id="storageStatus">Saved locally in your browser.</p>
-      </div>
-      <div class="toolbar">
-        <button type="button" class="ghost" id="loadJson">Load JSON</button>
-        <button type="button" class="ghost" id="saveJson">Save JSON</button>
+        <p class="status" id="storageStatus">Connecting to Firebase...</p>
       </div>
     </div>
     <div class="navrow">
@@ -21,8 +17,6 @@ const layout = `
       <div class="status" id="summaryStatus"></div>
     </div>
   </header>
-
-  <input type="file" id="filePicker" accept="application/json" hidden />
 
   <section id="homeView" class="view active" aria-live="polite">
     <div class="calendar-shell">
@@ -119,9 +113,6 @@ function collectRefs(root) {
     main: root.querySelector("main"),
     form: root.querySelector("#questForm"),
     listEl: root.querySelector("#questList"),
-    loadBtn: root.querySelector("#loadJson"),
-    saveBtn: root.querySelector("#saveJson"),
-    filePicker: root.querySelector("#filePicker"),
     statusEl: root.querySelector("#storageStatus"),
     summaryStatusEl: root.querySelector("#summaryStatus"),
     courseSelect: root.querySelector("#courseSelect"),
