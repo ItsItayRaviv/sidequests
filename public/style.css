@@ -408,6 +408,8 @@ button {
   background: #fff;
   border: 1px solid var(--border);
   font-size: 0.9rem;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .pill .dot {
@@ -415,6 +417,13 @@ button {
   height: 10px;
   border-radius: 50%;
   background: var(--accent);
+}
+
+.pill span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pill-stack {
@@ -555,6 +564,22 @@ button {
   grid-template-columns: 1fr auto;
   gap: 8px;
   align-items: center;
+}
+
+.progress-slider {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.progress-slider input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.progress-value {
+  font-weight: 700;
 }
 
 .chip-group {
@@ -733,6 +758,11 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.drawer-controls {
+  display: grid;
   gap: 8px;
 }
 

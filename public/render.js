@@ -133,10 +133,96 @@ function buildDayPill(entry) {
   return pill;
 }
 
+function buildCalendarCell({ iso, displayDay, currentState, actions, tasksByDate, today }) {
+  const cell = document.createElement("div");
+  cell.className = "day-cell";
+  const isToday = iso === today;
+  if (isToday) cell.classList.add("today");
+  if (iso === currentState.ui.selectedDate) cell.classList.add("selected");
+
+  const top = document.createElement("div");
+  top.className = "day-top";
+  const dayNumber = document.createElement("span");
+  dayNumber.className = "day-number";
+  dayNumber.textContent = displayDay;
+  top.appendChild(dayNumber);
+  if (isToday) {
+    const dot = document.createElement("span");
+    dot.className = "today-dot";
+    top.appendChild(dot);
+  }
+  cell.appendChild(top);
+
+  const questsForDay = tasksByDate[iso] || [];
+  const pillStack = document.createElement("div");
+  pillStack.className = "pill-stack";
+
+  const sorted = questsForDay.slice().sort((a, b) => Number(b.completion) - Number(a.completion));
+  const visible = sorted.slice(0, 2);
+  visible.forEach((entry) => pillStack.appendChild(buildDayPill(entry)));
+  if (questsForDay.length > 2) {
+    const more = document.createElement("div");
+    more.className = "more-link";
+    more.textContent = `+${questsForDay.length - 2} more`;
+    pillStack.appendChild(more);
+  }
+  cell.appendChild(pillStack);
+
+  const progress = questsForDay.length
+    ? Math.round(questsForDay.reduce((sum, q) => sum + (Number(q.completion) || 0), 0) / questsForDay.length)
+    : 0;
+
+  if (currentState.preferences.showProgressRing && questsForDay.length) {
+    const ring = document.createElement("div");
+    ring.className = "ring";
+    ring.style.setProperty("--p", progress);
+    cell.appendChild(ring);
+  } else if (questsForDay.length) {
+    const bar = document.createElement("div");
+    bar.className = "progress-bar";
+    const fill = document.createElement("span");
+    fill.style.width = `${progress}%`;
+    bar.appendChild(fill);
+    cell.appendChild(bar);
+  }
+
+  const workloadIntensity = (() => {
+    if (!currentState.preferences.showHeatmap) return null;
+    const estMinutes = questsForDay.reduce((sum, q) => sum + (Number(q.estMinutes) || 0), 0);
+    const weight = questsForDay.length + estMinutes / 120;
+    const ratio = Math.min(1, weight / 6);
+    const lightness = 248 - ratio * 16;
+    return `hsl(224, 58%, ${lightness}%)`;
+  })();
+  if (workloadIntensity) cell.style.background = workloadIntensity;
+
+  const overdue = questsForDay.some((q) => {
+    const diff = daysUntil(q.dueDate);
+    return diff !== null && diff < 0 && !q.done;
+  });
+  if (overdue) cell.classList.add("overdue-underline");
+
+  const tooltip = questsForDay
+    .map((q) => `${q.course || "Course"} | ${questTitle(q)} | ${questType(q)} | ${q.completion}%`)
+    .join("\n");
+  if (tooltip) cell.title = tooltip;
+
+  const addBtn = document.createElement("button");
+  addBtn.type = "button";
+  addBtn.className = "circle-btn day-add";
+  addBtn.textContent = "+";
+  addBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    actions.startNewQuestForDate(iso);
+  });
+  cell.appendChild(addBtn);
+
+  cell.addEventListener("click", () => actions.focusDay(iso));
+  return cell;
+}
+
 function renderCalendar(dom, currentState, actions) {
-  const { year, month } = currentState.calendar;
-  const monthName = MONTH_NAMES[month];
-  setText(dom.calendarLabel, `${monthName} ${year}`);
+  const { year, month, view } = currentState.calendar;
   if (!dom.calendarGrid) return;
   if (dom.calendarViewToggle) {
     dom.calendarViewToggle.querySelectorAll("button[data-mode]").forEach((btn) => {
@@ -150,14 +236,8 @@ function renderCalendar(dom, currentState, actions) {
       .join("");
     dom.calendarCourseFilter.value = currentState.calendar.courseFilter || "all";
   }
-  dom.calendarGrid.innerHTML = "";
-
-  const firstDay = new Date(year, month, 1);
-  const startIndex = (firstDay.getDay() + 6) % 7; // Monday as first
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
   const today = todayISO();
   const filterCourse = currentState.calendar.courseFilter;
-
   const tasksByDate = currentState.quests.reduce((acc, quest) => {
     if (!quest.dueDate) return acc;
     if (filterCourse !== "all" && quest.course !== filterCourse) return acc;
@@ -166,99 +246,63 @@ function renderCalendar(dom, currentState, actions) {
     return acc;
   }, {});
 
-  for (let i = 0; i < startIndex; i++) {
-    dom.calendarGrid.appendChild(document.createElement("div"));
-  }
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    const iso = `${year}-${pad(month + 1)}-${pad(day)}`;
-    const cell = document.createElement("div");
-    cell.className = "day-cell";
-    const isToday = iso === today;
-    if (isToday) cell.classList.add("today");
-    if (iso === currentState.ui.selectedDate) cell.classList.add("selected");
-
-    const top = document.createElement("div");
-    top.className = "day-top";
-    const dayNumber = document.createElement("span");
-    dayNumber.className = "day-number";
-    dayNumber.textContent = day;
-    top.appendChild(dayNumber);
-    if (isToday) {
-      const dot = document.createElement("span");
-      dot.className = "today-dot";
-      top.appendChild(dot);
+  const renderWeek = () => {
+    const selectedISO = currentState.ui.selectedDate || today;
+    const selected = new Date(selectedISO);
+    const base = Number.isNaN(selected.getTime()) ? new Date() : selected;
+    const start = new Date(base);
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // back to Monday
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    setText(
+      dom.calendarLabel,
+      `Week of ${MONTH_NAMES[start.getMonth()]} ${start.getDate()} - ${MONTH_NAMES[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`
+    );
+    dom.calendarGrid.innerHTML = "";
+    for (let offset = 0; offset < 7; offset++) {
+      const current = new Date(start);
+      current.setDate(start.getDate() + offset);
+      const iso = current.toISOString().split("T")[0];
+      const cell = buildCalendarCell({
+        iso,
+        displayDay: current.getDate(),
+        currentState,
+        actions,
+        tasksByDate,
+        today,
+      });
+      dom.calendarGrid.appendChild(cell);
     }
-    cell.appendChild(top);
+  };
 
-    const questsForDay = tasksByDate[iso] || [];
-    const pillStack = document.createElement("div");
-    pillStack.className = "pill-stack";
-
-    const sorted = questsForDay.slice().sort((a, b) => Number(b.completion) - Number(a.completion));
-    const visible = sorted.slice(0, 2);
-    visible.forEach((entry) => pillStack.appendChild(buildDayPill(entry)));
-    if (questsForDay.length > 2) {
-      const more = document.createElement("div");
-      more.className = "more-link";
-      more.textContent = `+${questsForDay.length - 2} more`;
-      pillStack.appendChild(more);
+  const renderMonth = () => {
+    const monthName = MONTH_NAMES[month];
+    setText(dom.calendarLabel, `${monthName} ${year}`);
+    dom.calendarGrid.innerHTML = "";
+    const firstDay = new Date(year, month, 1);
+    const startIndex = (firstDay.getDay() + 6) % 7; // Monday as first
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    for (let i = 0; i < startIndex; i++) {
+      dom.calendarGrid.appendChild(document.createElement("div"));
     }
-    cell.appendChild(pillStack);
-
-    const progress = questsForDay.length
-      ? Math.round(
-          questsForDay.reduce((sum, q) => sum + (Number(q.completion) || 0), 0) / questsForDay.length
-        )
-      : 0;
-
-    if (currentState.preferences.showProgressRing && questsForDay.length) {
-      const ring = document.createElement("div");
-      ring.className = "ring";
-      ring.style.setProperty("--p", progress);
-      cell.appendChild(ring);
-    } else if (questsForDay.length) {
-      const bar = document.createElement("div");
-      bar.className = "progress-bar";
-      const fill = document.createElement("span");
-      fill.style.width = `${progress}%`;
-      bar.appendChild(fill);
-      cell.appendChild(bar);
+    for (let day = 1; day <= daysInMonth; day++) {
+      const iso = `${year}-${pad(month + 1)}-${pad(day)}`;
+      const cell = buildCalendarCell({
+        iso,
+        displayDay: day,
+        currentState,
+        actions,
+        tasksByDate,
+        today,
+      });
+      dom.calendarGrid.appendChild(cell);
     }
+  };
 
-    const workloadIntensity = (() => {
-      if (!currentState.preferences.showHeatmap) return null;
-      const estMinutes = questsForDay.reduce((sum, q) => sum + (Number(q.estMinutes) || 0), 0);
-      const weight = questsForDay.length + estMinutes / 120;
-      const ratio = Math.min(1, weight / 6);
-      const lightness = 248 - ratio * 16;
-      return `hsl(224, 58%, ${lightness}%)`;
-    })();
-    if (workloadIntensity) cell.style.background = workloadIntensity;
-
-    const overdue = questsForDay.some((q) => {
-      const diff = daysUntil(q.dueDate);
-      return diff !== null && diff < 0 && !q.done;
-    });
-    if (overdue) cell.classList.add("overdue-underline");
-
-    const tooltip = questsForDay
-      .map((q) => `${q.course || "Course"} | ${questTitle(q)} | ${questType(q)} | ${q.completion}%`)
-      .join("\n");
-    if (tooltip) cell.title = tooltip;
-
-    const addBtn = document.createElement("button");
-    addBtn.type = "button";
-    addBtn.className = "circle-btn day-add";
-    addBtn.textContent = "+";
-    addBtn.addEventListener("click", (event) => {
-      event.stopPropagation();
-      actions.startNewQuestForDate(iso);
-    });
-    cell.appendChild(addBtn);
-
-    cell.addEventListener("click", () => actions.focusDay(iso));
-    dom.calendarGrid.appendChild(cell);
+  if (view === "week") {
+    renderWeek();
+  } else {
+    renderMonth();
   }
 }
 function renderDayFilter(dom, currentState) {
@@ -402,6 +446,7 @@ function renderSubtasks(container, quest, currentState, actions) {
 }
 
 function renderProgressBlock(container, quest, actions) {
+  const completion = Math.max(0, Math.min(100, Number(quest.completion) || 0));
   const block = document.createElement("div");
   block.className = "detail-block";
   const label = document.createElement("div");
@@ -414,7 +459,7 @@ function renderProgressBlock(container, quest, actions) {
   SEGMENTS.forEach((value) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = `segment ${value === quest.completion ? "active" : ""}`;
+    btn.className = `segment ${value === completion ? "active" : ""}`;
     btn.textContent = `${value}%`;
     btn.addEventListener("click", () => {
       const done = quest.done && value === 100 ? true : value === 100;
@@ -428,14 +473,34 @@ function renderProgressBlock(container, quest, actions) {
   });
   block.appendChild(segments);
 
+  const sliderRow = document.createElement("div");
+  sliderRow.className = "progress-slider";
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = "0";
+  slider.max = "100";
+  slider.value = completion;
+  slider.addEventListener("input", () => {
+    const value = Number(slider.value);
+    value < 100 && quest.done
+      ? actions.updateQuest(quest.id, { completion: value, done: false })
+      : actions.updateQuest(quest.id, { completion: value, done: value === 100 });
+    valueLabel.textContent = `${value}%`;
+  });
+  const valueLabel = document.createElement("span");
+  valueLabel.className = "progress-value";
+  valueLabel.textContent = `${completion}%`;
+  sliderRow.append(slider, valueLabel);
+  block.appendChild(sliderRow);
+
   const doneRow = document.createElement("label");
   doneRow.className = "meta";
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = quest.done;
   checkbox.addEventListener("change", () => {
-    const completion = checkbox.checked ? 100 : quest.completion;
-    actions.updateQuest(quest.id, { done: checkbox.checked, completion });
+    const nextCompletion = checkbox.checked ? 100 : completion;
+    actions.updateQuest(quest.id, { done: checkbox.checked, completion: nextCompletion });
   });
   doneRow.prepend(checkbox);
   const doneText = document.createElement("span");
@@ -795,6 +860,7 @@ function renderDrawer(dom, currentState, actions) {
     dom.questDrawer.classList.add("hidden");
     return;
   }
+  const completion = Math.max(0, Math.min(100, Number(quest.completion) || 0));
   dom.drawerTitle.textContent = `${quest.course || "Course"} / ${questTitle(quest)}`;
   dom.drawerMeta.textContent = `${formatDue(quest.dueDate)} - ${questType(quest)} - ${quest.completion || 0}%`;
   dom.drawerBody.innerHTML = "";
@@ -809,13 +875,53 @@ function renderDrawer(dom, currentState, actions) {
   const bar = document.createElement("div");
   bar.className = "progress-bar";
   const fill = document.createElement("span");
-  fill.style.width = `${quest.completion || 0}%`;
+  fill.style.width = `${completion}%`;
   bar.appendChild(fill);
   const pct = document.createElement("span");
   pct.className = "muted small";
-  pct.textContent = `${quest.completion || 0}%`;
+  pct.textContent = `${completion}%`;
   progress.append(bar, pct);
   dom.drawerBody.appendChild(progress);
+
+  const controls = document.createElement("div");
+  controls.className = "drawer-controls";
+  const sliderRow = document.createElement("div");
+  sliderRow.className = "progress-slider";
+  const slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = "0";
+  slider.max = "100";
+  slider.value = completion;
+  const sliderValue = document.createElement("span");
+  sliderValue.className = "progress-value";
+  sliderValue.textContent = `${completion}%`;
+  slider.addEventListener("input", () => {
+    const value = Number(slider.value);
+    sliderValue.textContent = `${value}%`;
+    if (value < 100 && quest.done) {
+      actions.updateQuest(quest.id, { completion: value, done: false });
+    } else {
+      actions.updateQuest(quest.id, { completion: value, done: value === 100 });
+    }
+  });
+  sliderRow.append(slider, sliderValue);
+
+  const doneRow = document.createElement("label");
+  doneRow.className = "meta";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = quest.done;
+  checkbox.addEventListener("change", () => {
+    const nextCompletion = checkbox.checked ? 100 : completion;
+    actions.updateQuest(quest.id, { done: checkbox.checked, completion: nextCompletion });
+  });
+  const doneText = document.createElement("span");
+  doneText.textContent = "Mark as done";
+  doneRow.prepend(checkbox);
+  doneRow.appendChild(doneText);
+
+  controls.append(sliderRow, doneRow);
+  dom.drawerBody.appendChild(controls);
 
   if (quest.notes) {
     const notes = document.createElement("p");

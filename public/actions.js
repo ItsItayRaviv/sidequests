@@ -183,18 +183,39 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
   }
 
   function setCalendarMonth(delta) {
-    const currentSelected = state.ui.selectedDate ? new Date(state.ui.selectedDate) : null;
-    const fallbackDay = currentSelected?.getDate() || 1;
-    shiftCalendar(state, delta);
-    const daysInTarget = new Date(state.calendar.year, state.calendar.month + 1, 0).getDate();
-    const targetDay = Math.min(fallbackDay, daysInTarget);
-    const nextDate = new Date(state.calendar.year, state.calendar.month, targetDay);
-    state.ui.selectedDate = nextDate.toISOString().split("T")[0];
-    refresh();
+    if (state.calendar.view === "week") {
+      const base = state.ui.selectedDate ? new Date(state.ui.selectedDate) : new Date();
+      if (!Number.isNaN(base.getTime())) {
+        base.setDate(base.getDate() + delta * 7);
+        state.calendar.month = base.getMonth();
+        state.calendar.year = base.getFullYear();
+        state.ui.selectedDate = base.toISOString().split("T")[0];
+      }
+      refresh();
+    } else {
+      const currentSelected = state.ui.selectedDate ? new Date(state.ui.selectedDate) : null;
+      const fallbackDay = currentSelected?.getDate() || 1;
+      shiftCalendar(state, delta);
+      const daysInTarget = new Date(state.calendar.year, state.calendar.month + 1, 0).getDate();
+      const targetDay = Math.min(fallbackDay, daysInTarget);
+      const nextDate = new Date(state.calendar.year, state.calendar.month, targetDay);
+      state.ui.selectedDate = nextDate.toISOString().split("T")[0];
+      refresh();
+    }
   }
 
   function setCalendarView(mode) {
     state.calendar.view = mode;
+    if (mode === "month" && state.ui.selectedDate) {
+      const parsed = new Date(state.ui.selectedDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        state.calendar.month = parsed.getMonth();
+        state.calendar.year = parsed.getFullYear();
+      }
+    }
+    if (!state.ui.selectedDate) {
+      state.ui.selectedDate = todayISO();
+    }
     refresh();
   }
 
