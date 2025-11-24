@@ -1,9 +1,9 @@
 import { createActions } from "./actions.js";
 import { bindEvents } from "./events.js";
-import { mountLayout } from "./layout.js";
-import { ensureDefaults, normalizeData, state, withDefaults } from "./state.js";
-import { createStorage } from "./storage.js";
-import { createModal } from "./modal.js";
+import { mountLayout } from "../layout.js";
+import { ensureDefaults, normalizeData, state, withDefaults } from "../state.js";
+import { createStorage } from "../storage.js";
+import { createModal } from "../modal.js";
 
 const host = document.getElementById("appRoot") || document.body;
 const dom = mountLayout(host);
