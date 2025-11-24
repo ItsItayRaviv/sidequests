@@ -251,7 +251,7 @@ function renderCalendar(dom, currentState, actions) {
     const selected = new Date(selectedISO);
     const base = Number.isNaN(selected.getTime()) ? new Date() : selected;
     const start = new Date(base);
-    start.setDate(start.getDate() - ((start.getDay() + 6) % 7)); // back to Monday
+    start.setDate(start.getDate() - start.getDay()); // back to Sunday
     const end = new Date(start);
     end.setDate(start.getDate() + 6);
     setText(
@@ -280,7 +280,7 @@ function renderCalendar(dom, currentState, actions) {
     setText(dom.calendarLabel, `${monthName} ${year}`);
     dom.calendarGrid.innerHTML = "";
     const firstDay = new Date(year, month, 1);
-    const startIndex = (firstDay.getDay() + 6) % 7; // Monday as first
+    const startIndex = firstDay.getDay(); // Sunday as first
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     for (let i = 0; i < startIndex; i++) {
       dom.calendarGrid.appendChild(document.createElement("div"));

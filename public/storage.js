@@ -29,11 +29,18 @@ function toTimestamp(dateLike) {
   return Timestamp.fromDate(parsed);
 }
 
+function toLocalISO(date) {
+  if (!date) return "";
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function toDateString(value) {
   if (!value) return "";
-  if (value instanceof Timestamp) return value.toDate().toISOString().split("T")[0];
-  if (value?.toDate) return value.toDate().toISOString().split("T")[0];
-  if (typeof value === "string") return value;
+  if (value instanceof Timestamp) return toLocalISO(value.toDate());
+  if (value?.toDate) return toLocalISO(value.toDate());
+  if (typeof value === "string") return toLocalISO(value);
   return "";
 }
 

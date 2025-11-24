@@ -126,7 +126,8 @@ export function formatDue(dateString) {
     daysLeft === 0
       ? "Due today"
       : `${absoluteDays} day${absoluteDays === 1 ? "" : "s"} ${daysLeft >= 0 ? "left" : "overdue"}`;
-  return `${d.toISOString().split("T")[0]} - ${label}`;
+  const dateLabel = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return `${dateLabel} - ${label}`;
 }
 
 export function normalizeData(raw) {
@@ -154,5 +155,8 @@ export function shiftCalendar(current = state, delta) {
 export function todayISO() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  return today.toISOString().split("T")[0];
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }

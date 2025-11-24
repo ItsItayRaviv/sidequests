@@ -55,7 +55,7 @@ const layout = `
           </div>
         </div>
         <div class="weekday-row" id="weekdayRow">
-          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
       </div>
