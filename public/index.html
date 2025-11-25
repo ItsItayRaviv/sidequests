@@ -1,23 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quest Planner</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div id="appRoot"></div>
-  <script id="firebase-config" type="application/json">
-    {
-      "apiKey": "AIzaSyBILKpTdfqemLIpVPxKL_7SElbaUSnyS6I",
-      "authDomain": "side-quest-itay.firebaseapp.com",
-      "projectId": "side-quest-itay",
-      "storageBucket": "side-quest-itay.firebasestorage.app",
-      "messagingSenderId": "691199209900",
-      "appId": "1:691199209900:web:536985c10adde2560e0a09"
-    }
-  </script>
-  <script type="module" src="./app.js"></script>
-</body>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SideQuests</title>
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/12.6.0/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/12.6.0/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/12.6.0/firebase-firestore-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=false"></script>
+  </head>
+  <body>
+    <div id="message">
+      <h2>Welcome</h2>
+      <h1>This is my side quests app</h1>
+      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
+    </div>
+  </body>
 </html>
