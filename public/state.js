@@ -17,7 +17,7 @@ export const state = {
   userEmail: "",
   isAnonymous: true,
   quests: [],
-  selectedDate: null,
+  selectedDate: todayISO(),
   totalXP: 0,
   totalCoins: 0,
   timezone: "Asia/Jerusalem",
@@ -37,7 +37,7 @@ export async function loadStateForUser(user) {
   state.userDisplayName = user.displayName || "";
   state.userEmail = user.email || "";
   state.isAnonymous = !!user.isAnonymous;
-  state.selectedDate = todayISO();
+  setSelectedDate(todayISO());
 
   const userProfile = await ensureUserDoc(user.uid);
   applyUserToState(userProfile);
@@ -83,6 +83,11 @@ export async function updateQuest(questId, patch) {
 export function todayISO() {
   const d = new Date();
   return d.toISOString().slice(0, 10);
+}
+
+export function setSelectedDate(value) {
+  const iso = formatDateOnly(value);
+  state.selectedDate = iso || todayISO();
 }
 
 function applyUserToState(userDocData) {

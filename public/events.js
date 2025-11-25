@@ -1,20 +1,22 @@
 import { renderApp } from "./render.js";
-import { state, addQuest, loadStateForUser } from "./state.js";
+import { state, addQuest, loadStateForUser, setSelectedDate } from "./state.js";
 import { signInWithGoogle } from "./auth.js";
 
 export function attachGlobalHandlers() {
   document.addEventListener("click", async (event) => {
-    const action = event.target.dataset.action;
-    if (!action) return;
+    const actionTarget = event.target?.closest?.("[data-action]");
+    if (!actionTarget) return;
 
-    await handleAction(action, event);
+    const action = actionTarget.dataset.action;
+
+    await handleAction(action, event, actionTarget);
 
     // After any state change:
     renderApp();
   });
 }
 
-async function handleAction(action, event) {
+async function handleAction(action, event, target) {
   switch (action) {
     case "new-quest":
       await createTemplateQuest();
@@ -22,7 +24,9 @@ async function handleAction(action, event) {
     case "sign-in-google":
       await handleGoogleSignIn();
       break;
-    // TODO v0.1: handle select-day
+    case "select-day":
+      handleSelectDay(target);
+      break;
     // TODO v0.1: handle toggle-quest
     // TODO v0.1: handle save-quest
     default:
@@ -36,14 +40,16 @@ async function createTemplateQuest() {
     return;
   }
 
+  const targetDate = state.selectedDate;
+
   const payload = {
     title: "New Quest",
     course: "General",
     status: "planned",
-    dueDate: endOfToday(),
+    dueDate: endOfDay(targetDate),
     estimatedMinutes: 60,
-    xp: 10,
-    coins: 5,
+    xp: 50,
+    coins: 200,
   };
 
   try {
@@ -51,6 +57,17 @@ async function createTemplateQuest() {
   } catch (err) {
     console.error("Failed to create quest", err);
   }
+}
+
+function endOfDay(iso) {
+  const fallback = endOfToday();
+  if (!iso) return fallback;
+
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return fallback;
+
+  d.setHours(23, 59, 0, 0);
+  return d;
 }
 
 function endOfToday() {
@@ -66,4 +83,10 @@ async function handleGoogleSignIn() {
   } catch (err) {
     console.error("Google sign-in failed", err);
   }
+}
+
+function handleSelectDay(target) {
+  const iso = target?.dataset?.day;
+  if (!iso) return;
+  setSelectedDate(iso);
 }

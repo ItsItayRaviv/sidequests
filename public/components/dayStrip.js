@@ -20,27 +20,40 @@ function buildCurrentWeek(anchorISO) {
 
 export function DayStrip(state) {
   const today = todayISO();
+  const selectedDate = state.selectedDate || today;
   const days = buildCurrentWeek(today);
 
   const buttons = days
     .map((day) => {
       const isToday = day.iso === today;
+      const isSelected = day.iso === selectedDate;
+      const classes = [
+        "day-strip__day",
+        isToday ? "is-today" : "",
+        isSelected ? "is-selected" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
 
-      const questCount = (state.quests || []).filter((q => q.dueDate === day.iso)).length;
+      const questCount = (state.quests || []).filter((q) => q.dueDate === day.iso).length;
       const questsLabel = questCount === 0 ? "no quests" 
-        : questCount === 1 ? "quest" 
-        : "quests";
+        : questCount === 1 ? `${questCount} quest` 
+        : `${questCount} quests`;
 
       day.questsLabel = questsLabel;
-      day.questsNumber = questCount === 0 ? "" : questCount;
 
       return `
-        <div class="day-strip__day ${isToday ? "is-today" : ""}">
+        <button
+          type="button"
+          class="${classes}"
+          data-action="select-day"
+          data-day="${day.iso}"
+          aria-pressed="${isSelected}"
+        >
           <span class="day-strip__day-label">${day.label}</span>
           <span class="day-strip__day-number">${day.dayNum}</span>
-          <span class="day-strip__quests-number">${day.questsNumber}</span>
-          <span class="day-strip__quests-label">${day.questsLabel}</span>
-        </div>
+          <span class="day-strip__quests-text">${day.questsLabel}</span>
+        </button>
       `;
     })
     .join("");

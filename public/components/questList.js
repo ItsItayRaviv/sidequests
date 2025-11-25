@@ -1,5 +1,10 @@
 export function QuestList(state) {
-  const items = (state.quests || [])
+  const selectedDate = state.selectedDate;
+  const questsForDay = selectedDate
+    ? (state.quests || []).filter((q) => q.dueDate === selectedDate)
+    : state.quests || [];
+
+  const items = questsForDay
     .map((q) => {
       return `
         <li class="quest-card">
