@@ -3,9 +3,10 @@ import { initState } from "./state.js";
 import { renderApp } from "./render.js";
 import { attachGlobalHandlers } from "./events.js";
 
-function init() {
-  initState();       // sets up state object, selectedDate, etc.
-  renderApp();       // draws the UI
+async function init() {
+  renderApp(); // initial paint (shows loading state)
+  await initState(); // sets up state object, selectedDate, fetches Firestore
+  renderApp(); // draw with data
   attachGlobalHandlers(); // wires up click handlers (delegated)
 }
 

@@ -18,7 +18,7 @@ function buildCurrentWeek(anchorISO) {
   return days;
 }
 
-export function DayStrip() {
+export function DayStrip(state) {
   const today = todayISO();
   const days = buildCurrentWeek(today);
 
@@ -26,10 +26,20 @@ export function DayStrip() {
     .map((day) => {
       const isToday = day.iso === today;
 
+      const questCount = (state.quests || []).filter((q => q.dueDate === day.iso)).length;
+      const questsLabel = questCount === 0 ? "no quests" 
+        : questCount === 1 ? "quest" 
+        : "quests";
+
+      day.questsLabel = questsLabel;
+      day.questsNumber = questCount === 0 ? "" : questCount;
+
       return `
         <div class="day-strip__day ${isToday ? "is-today" : ""}">
           <span class="day-strip__day-label">${day.label}</span>
           <span class="day-strip__day-number">${day.dayNum}</span>
+          <span class="day-strip__quests-number">${day.questsNumber}</span>
+          <span class="day-strip__quests-label">${day.questsLabel}</span>
         </div>
       `;
     })

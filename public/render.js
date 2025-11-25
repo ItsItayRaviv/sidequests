@@ -5,16 +5,32 @@ import { QuestList } from "./components/questList.js";
 
 export function renderApp() {
   const root = document.getElementById("appRoot");
-  root.innerHTML = `
-    <div class="app-shell">
-      <h1 class="main-title">SideQuests</h1>
-      <p class="subtitle">
-        Minimal MVP shell. Core features incoming.
-      </p>
 
+  if (state.loading) {
+    root.innerHTML = `
+      <div class="page">
+        ${Header(state)}
+        <div class="app-shell">
+          <h1 class="main-title">SideQuests</h1>
+          <p class="subtitle">Connecting to Firestore...</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  root.innerHTML = `
+    <div class="page">
       ${Header(state)}
-      ${DayStrip(state)}
-      ${QuestList(state)}
+      <div class="app-shell">
+        <h1 class="main-title">SideQuests</h1>
+        <p class="subtitle">
+          Minimal MVP shell. Core features incoming.
+        </p>
+
+        ${DayStrip(state)}
+        ${QuestList(state)}
+      </div>
     </div>
   `;
 }

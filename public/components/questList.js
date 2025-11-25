@@ -22,6 +22,9 @@ export function QuestList(state) {
     <section class="quest-list">
       <h2 class="quest-list__title">Quests</h2>
       <ul class="quest-list__items">${items || ""}</ul>
+      <button class="btn btn-emerald quest-list__new" data-action="new-quest">
+        + New Quest
+      </button>
     </section>
   `;
 }
