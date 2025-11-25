@@ -29,11 +29,18 @@ function toTimestamp(dateLike) {
   return Timestamp.fromDate(parsed);
 }
 
+function toLocalISO(date) {
+  if (!date) return "";
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function toDateString(value) {
   if (!value) return "";
-  if (value instanceof Timestamp) return value.toDate().toISOString().split("T")[0];
-  if (value?.toDate) return value.toDate().toISOString().split("T")[0];
-  if (typeof value === "string") return value;
+  if (value instanceof Timestamp) return toLocalISO(value.toDate());
+  if (value?.toDate) return toLocalISO(value.toDate());
+  if (typeof value === "string") return toLocalISO(value);
   return "";
 }
 
@@ -88,9 +95,11 @@ export function createStorage({ setStatus } = {}) {
       const progress = progressById[docSnap.id] || {};
       return withDefaults({
         id: docSnap.id,
+        title: data.title || data.category || "",
         course: data.course || "General",
         category: data.category || "General",
         dueDate: toDateString(data.dueDate),
+        dueTime: data.dueTime || "",
         estMinutes: data.estMinutes ?? null,
         link: data.link || "",
         filePath: data.filePath || "",
@@ -108,9 +117,11 @@ export function createStorage({ setStatus } = {}) {
     const now = serverTimestamp();
     const reward = normalizeReward(quest.reward);
     const definition = {
+      title: quest.title || quest.category || "Quest",
       course: quest.course || "General",
       category: quest.category || "General",
       dueDate: toTimestamp(quest.dueDate),
+      dueTime: quest.dueTime || "",
       estMinutes: quest.estMinutes ?? null,
       link: quest.link || "",
       filePath: quest.filePath || "",
