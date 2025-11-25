@@ -1,20 +1,40 @@
 /* Global styles */
 :root {
-  --color-bg: #131424;
-  --color-surface: #1c1e30;
-  --color-text: #ede9fe;
-  --color-muted: #c4b5fd;
-  --color-quiet: #a78bfa;
-  --color-heading: #ddd6fe;
-  --color-strong-text: #ffffff;
-  --color-border: #2a2b40;
+  --color-bg: #faf7f2;
+  --color-surface: #f0ebe4;
+  --color-text: #2d2a25;
+  --color-muted: #8d8375;
+  --color-quiet: #a79c8d;
+  --color-heading: #343028;
+  --color-strong-text: #1d1a15;
+  --color-border: #d7d0c6;
 
-  --color-emerald: #8b5cf6;
-  --color-emerald-soft: #ede9fe;
-  --color-emerald-tint: rgba(139, 92, 246, 0.18);
+  --color-emerald: #5bbf83;
+  --color-emerald-soft: #e1f7ec;
+  --color-emerald-tint: rgba(91, 191, 131, 0.18);
+
+  --color-amber: #df9b24;
+  --color-amber-border: rgba(223, 155, 36, 0.45);
+  --color-amber-bg: rgba(223, 155, 36, 0.12);
+}
+
+:root[data-theme="dark"],
+body[data-theme="dark"] {
+  --color-bg: #0c1410;
+  --color-surface: #14201a;
+  --color-text: #e3f4ec;
+  --color-muted: #9bb3a7;
+  --color-quiet: #7b8f85;
+  --color-heading: #d8eee3;
+  --color-strong-text: #ffffff;
+  --color-border: #23352e;
+
+  --color-emerald: #4ade80;        
+  --color-emerald-soft: #dcfce7;
+  --color-emerald-tint: rgba(74, 222, 128, 0.18);
 
   --color-amber: #fcd34d;
-  --color-amber-border: rgba(252, 211, 77, 0.4);
+  --color-amber-border: rgba(252, 211, 77, 0.45);
   --color-amber-bg: rgba(252, 211, 77, 0.12);
 }
 
@@ -51,10 +71,11 @@ a {
   color: var(--color-muted);
 }
 
-/* Header component styles */
+/*||||||||||| ||||||||||| ||||||||||| ||||||||||| ||||||||||| |||||||||||*/
+/*||||||||||| ||||||||||| Header component styles ||||||||||| |||||||||||*/
+/*||||||||||| ||||||||||| ||||||||||| ||||||||||| ||||||||||| |||||||||||*/
 .header {
   --header-muted: var(--color-muted);
-  --header-border: var(--color-border);
   --header-progress: var(--color-emerald);
   --header-progress-bg: var(--color-border);
   --header-total: var(--color-quiet);
@@ -111,6 +132,7 @@ a {
 .header__coin-icon {
   width: 36px;
   height: 36px;
+  font-size: medium;
   border-radius: 9999px;
   background: var(--header-coin-bg);
   border: 1px solid var(--header-coin-border);
@@ -122,20 +144,24 @@ a {
 }
 
 .header__coins-label {
-  font-size: 12px;
+  font-size: smaller;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--header-muted);
+  text-align: center;
 }
 
 .header__coins-value {
-  font-size: 18px;
+  font-size: large;
   font-weight: 600;
   color: var(--header-coin-text);
   line-height: 1.1;
+  text-align: center;
 }
 
-/* DayStrip component styles */
+/*||||||||||| ||||||||||| ||||||||||| | ||||||||||| ||||||||||| |||||||||||*/
+/*||||||||||| ||||||||||| DayStrip component styles ||||||||||| |||||||||||*/
+/*||||||||||| ||||||||||| ||||||||||| | ||||||||||| ||||||||||| |||||||||||*/
 .day-strip {
   --day-title: var(--color-heading);
   --day-border: var(--color-border);
@@ -149,7 +175,7 @@ a {
 }
 
 .day-strip__title {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--day-title);
   font-weight: 600;
   margin-bottom: 8px;
@@ -177,7 +203,7 @@ a {
 }
 
 .day-strip__day-label {
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -190,11 +216,12 @@ a {
 .day-strip__day.is-today {
   border-color: var(--day-highlight-border);
   background: var(--day-highlight-bg);
-  color: var(--day-highlight-text);
   font-weight: 600;
 }
 
-/* QuestList component styles */
+/*||||||||||| ||||||||||| ||||||||||| || ||||||||||| ||||||||||| |||||||||||*/
+/*||||||||||| ||||||||||| QuestList component styles ||||||||||| |||||||||||*/
+/*||||||||||| ||||||||||| ||||||||||| || ||||||||||| ||||||||||| |||||||||||*/
 .quest-list {
   --quest-title: var(--color-heading);
   --quest-card-bg: var(--color-surface);
@@ -255,380 +282,6 @@ a {
   text-align: right;
   font-size: 12px;
   color: var(--quest-meta);
-  white-space: nowrap;
-}
-
-.quest-card__status {
-  text-transform: capitalize;
-}
-
-/* Header component styles */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.header__xp {
-  flex: 1;
-}
-
-.header__xp-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #94a3b8; /* slate-400 */
-  font-size: 12px;
-  margin-bottom: 4px;
-}
-
-.header__progress {
-  width: 100%;
-  height: 8px;
-  border-radius: 8px;
-  background: #1e293b; /* slate-800 */
-  overflow: hidden;
-}
-
-.header__progress-fill {
-  height: 100%;
-  background: #34d399; /* emerald-400 */
-}
-
-.header__xp-total {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #64748b; /* slate-500 */
-}
-
-.header__coins {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.header__coin-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-  background: rgba(245, 158, 11, 0.2); /* amber-500 @20% */
-  border: 1px solid rgba(251, 191, 36, 0.6); /* amber-400 @60% */
-  color: #fde68a; /* amber-200 */
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header__coins-label {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #94a3b8; /* slate-400 */
-}
-
-.header__coins-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fde68a; /* amber-200 */
-  line-height: 1.1;
-}
-
-/* DayStrip component styles */
-.day-strip {
-  margin-bottom: 24px;
-}
-
-.day-strip__title {
-  font-size: 14px;
-  color: #cbd5e1; /* slate-300 */
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.day-strip__days {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.day-strip__day {
-  width: 64px;
-  padding: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #1e293b; /* slate-800 */
-  background: #0f172a; /* slate-900 */
-  color: #e2e8f0; /* slate-200 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.day-strip__day-label {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.day-strip__day-number {
-  font-size: 18px;
-  line-height: 1.2;
-}
-
-.day-strip__day.is-today {
-  border-color: #34d399; /* emerald-400 */
-  background: rgba(16, 185, 129, 0.2); /* emerald-500 @20% */
-  color: #d1fae5; /* emerald-100 */
-  font-weight: 600;
-}
-
-/* QuestList component styles */
-.quest-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.quest-list__title {
-  font-size: 14px;
-  color: #cbd5e1; /* slate-300 */
-  font-weight: 600;
-}
-
-.quest-list__items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.quest-card {
-  padding: 12px;
-  border-radius: 8px;
-  background: #0f172a; /* slate-900 */
-  border: 1px solid #1e293b; /* slate-800 */
-}
-
-.quest-card__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.quest-card__text {
-  min-width: 0;
-}
-
-.quest-card__title {
-  font-weight: 600;
-  color: #f1f5f9; /* slate-100 */
-  margin-bottom: 4px;
-}
-
-.quest-card__course {
-  font-size: 12px;
-  color: #64748b; /* slate-500 */
-}
-
-.quest-card__meta {
-  text-align: right;
-  font-size: 12px;
-  color: #94a3b8; /* slate-400 */
-  white-space: nowrap;
-}
-
-.quest-card__status {
-  text-transform: capitalize;
-}
-
-/* Header component styles */
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.header__xp {
-  flex: 1;
-}
-
-.header__xp-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: #94a3b8; /* slate-400 */
-  font-size: 12px;
-  margin-bottom: 4px;
-}
-
-.header__progress {
-  width: 100%;
-  height: 8px;
-  border-radius: 8px;
-  background: #1e293b; /* slate-800 */
-  overflow: hidden;
-}
-
-.header__progress-fill {
-  height: 100%;
-  background: #34d399; /* emerald-400 */
-}
-
-.header__xp-total {
-  margin-top: 4px;
-  font-size: 11px;
-  color: #64748b; /* slate-500 */
-}
-
-.header__coins {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.header__coin-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 9999px;
-  background: rgba(245, 158, 11, 0.2); /* amber-500 @20% */
-  border: 1px solid rgba(251, 191, 36, 0.6); /* amber-400 @60% */
-  color: #fde68a; /* amber-200 */
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.header__coins-label {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #94a3b8; /* slate-400 */
-}
-
-.header__coins-value {
-  font-size: 18px;
-  font-weight: 600;
-  color: #fde68a; /* amber-200 */
-  line-height: 1.1;
-}
-
-/* DayStrip component styles */
-.day-strip {
-  margin-bottom: 24px;
-}
-
-.day-strip__title {
-  font-size: 14px;
-  color: #cbd5e1; /* slate-300 */
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.day-strip__days {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.day-strip__day {
-  width: 64px;
-  padding: 8px 0;
-  border-radius: 8px;
-  border: 1px solid #1e293b; /* slate-800 */
-  background: #0f172a; /* slate-900 */
-  color: #e2e8f0; /* slate-200 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.day-strip__day-label {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.day-strip__day-number {
-  font-size: 18px;
-  line-height: 1.2;
-}
-
-.day-strip__day.is-today {
-  border-color: #34d399; /* emerald-400 */
-  background: rgba(16, 185, 129, 0.2); /* emerald-500 @20% */
-  color: #d1fae5; /* emerald-100 */
-  font-weight: 600;
-}
-
-/* QuestList component styles */
-.quest-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.quest-list__title {
-  font-size: 14px;
-  color: #cbd5e1; /* slate-300 */
-  font-weight: 600;
-}
-
-.quest-list__items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.quest-card {
-  padding: 12px;
-  border-radius: 8px;
-  background: #0f172a; /* slate-900 */
-  border: 1px solid #1e293b; /* slate-800 */
-}
-
-.quest-card__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.quest-card__text {
-  min-width: 0;
-}
-
-.quest-card__title {
-  font-weight: 600;
-  color: #f1f5f9; /* slate-100 */
-  margin-bottom: 4px;
-}
-
-.quest-card__course {
-  font-size: 12px;
-  color: #64748b; /* slate-500 */
-}
-
-.quest-card__meta {
-  text-align: right;
-  font-size: 12px;
-  color: #94a3b8; /* slate-400 */
   white-space: nowrap;
 }
 
