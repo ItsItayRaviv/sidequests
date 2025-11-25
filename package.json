@@ -1,5 +1,6 @@
 {
   "scripts": {
+    "build": "echo \"No build step; deploying static /public\"",
     "import:assignments": "node scripts/importAssignments.js"
   },
   "dependencies": {
