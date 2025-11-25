@@ -147,11 +147,9 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
       state.calendar.year = parsed.getFullYear();
     }
     const tasks = state.quests.filter((q) => q.dueDate === target);
-    if (tasks.length && state.ui.detailMode !== "new") {
-      state.ui.selectedQuestId = tasks[0].id;
+    if (state.ui.detailMode !== "new") {
+      state.ui.selectedQuestId = tasks.length ? tasks[0].id : null;
       state.ui.detailMode = "view";
-    } else if (!tasks.length) {
-      state.ui.selectedQuestId = null;
     }
     refresh();
   }
@@ -167,10 +165,21 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     refresh();
   }
 
+  function toggleQuestCard(questId) {
+    if (state.ui.detailMode === "new") state.ui.detailMode = "view";
+    state.ui.selectedQuestId = state.ui.selectedQuestId === questId ? null : questId;
+    refresh();
+  }
+
   function startNewQuestForDate(dateString) {
     state.ui.selectedDate = dateString || state.ui.selectedDate || todayISO();
     state.ui.detailMode = "new";
     state.ui.selectedQuestId = null;
+    refresh();
+  }
+
+  function cancelNewQuest() {
+    state.ui.detailMode = "view";
     refresh();
   }
 
@@ -258,6 +267,7 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     addCourse,
     addQuest,
     closeDrawer,
+    cancelNewQuest,
     focusDay,
     jumpToToday,
     openDrawer,
@@ -266,6 +276,7 @@ export function createActions({ storage, dom, setSummary, modal, setStatus }) {
     removeCourse,
     removeQuest,
     selectQuest,
+    toggleQuestCard,
     setCalendarCourseFilter,
     setCalendarMonth,
     setCalendarView,

@@ -328,67 +328,86 @@ function renderDayList(dom, currentState, actions) {
     return true;
   });
 
-  const activeIds = filtered.map((q) => q.id);
-  if (currentState.ui.detailMode !== "new" && filtered.length && !activeIds.includes(currentState.ui.selectedQuestId)) {
-    currentState.ui.selectedQuestId = filtered[0].id;
-  }
-
   if (!filtered.length) {
-    dom.dayQuestList.innerHTML =
-      '<div class="empty">No quests for this date. Add one to start planning.</div>';
+    if (currentState.ui.detailMode === "new") {
+      const frag = document.createDocumentFragment();
+      frag.appendChild(buildNewQuestCard(currentState, actions, selectedDate));
+      dom.dayQuestList.appendChild(frag);
+    } else {
+      dom.dayQuestList.innerHTML =
+        '<div class="empty">No quests for this date. Add one to start planning.</div>';
+    }
     return;
   }
 
+  if (currentState.ui.detailMode !== "new" && filtered.length && !filtered.find((q) => q.id === currentState.ui.selectedQuestId)) {
+    currentState.ui.selectedQuestId = filtered[0].id;
+  }
+
   const frag = document.createDocumentFragment();
-  filtered
+  const sorted = filtered
     .slice()
-    .sort((a, b) => Number(a.done) - Number(b.done) || Number(b.completion) - Number(a.completion))
-    .forEach((quest) => {
-      const card = document.createElement("article");
-      card.className = `day-card ${quest.id === currentState.ui.selectedQuestId ? "selected" : ""}`;
-      const strip = document.createElement("div");
-      strip.className = "course-strip";
-      strip.style.background = courseColor(quest.course);
-      card.appendChild(strip);
+    .sort((a, b) => Number(a.done) - Number(b.done) || Number(b.completion) - Number(a.completion));
 
-      const header = document.createElement("div");
-      header.className = "card-header";
-      const title = document.createElement("div");
-      title.className = "card-title";
-      title.textContent = quest.course || "Course";
-      header.appendChild(title);
+  sorted.forEach((quest) => {
+    const isExpanded = currentState.ui.selectedQuestId === quest.id && currentState.ui.detailMode !== "new";
+    const card = document.createElement("article");
+    card.className = `day-card ${isExpanded ? "selected" : ""}`;
+    const strip = document.createElement("div");
+    strip.className = "course-strip";
+    strip.style.background = courseColor(quest.course);
+    card.appendChild(strip);
 
-      const progress = document.createElement("div");
-      progress.className = "progress-line";
-      const bar = document.createElement("div");
-      bar.className = "progress-bar";
-      const fill = document.createElement("span");
-      fill.style.width = `${quest.completion || 0}%`;
-      bar.appendChild(fill);
-      const pct = document.createElement("span");
-      pct.className = "muted small";
-      pct.textContent = `${quest.completion || 0}%`;
-      progress.append(bar, pct);
-      header.appendChild(progress);
-      card.appendChild(header);
+    const header = document.createElement("div");
+    header.className = "card-header";
+    const title = document.createElement("div");
+    title.className = "card-title";
+    title.textContent = quest.course || "Course";
+    header.appendChild(title);
 
-      const meta = document.createElement("div");
-      meta.className = "meta";
-      meta.textContent = `${questTitle(quest)} - due ${dueTimeLabel(quest)}`;
-      card.appendChild(meta);
+    const caret = document.createElement("span");
+    caret.className = "caret";
+    caret.textContent = isExpanded ? "▴" : "▾";
 
-      const iconRow = document.createElement("div");
-      iconRow.className = "icon-row";
-      if (quest.notes) iconRow.append("note");
-      if (quest.link) iconRow.append("link");
-      const overdue = daysUntil(quest.dueDate);
-      if (overdue !== null && overdue < 0 && !quest.done) iconRow.append("overdue");
-      if (quest.done) iconRow.append("done");
-      if (iconRow.childNodes.length) card.appendChild(iconRow);
+    const progress = document.createElement("div");
+    progress.className = "small-progress";
+    const bar = document.createElement("div");
+    bar.className = "progress-bar";
+    const fill = document.createElement("span");
+    fill.style.width = `${quest.completion || 0}%`;
+    bar.appendChild(fill);
+    const pct = document.createElement("span");
+    pct.className = "muted small";
+    pct.textContent = `${quest.completion || 0}%`;
+    progress.append(bar, pct);
+    header.append(progress, caret);
+    card.appendChild(header);
 
-      card.addEventListener("click", () => actions.selectQuest(quest.id));
-      frag.appendChild(card);
-    });
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${questTitle(quest)} · ${questType(quest)} · due ${dueTimeLabel(quest)}`;
+    card.appendChild(meta);
+
+    const iconRow = document.createElement("div");
+    iconRow.className = "icon-row";
+    if (quest.notes) iconRow.append("🗒");
+    if (quest.link) iconRow.append("🔗");
+    const overdue = daysUntil(quest.dueDate);
+    if (overdue !== null && overdue < 0 && !quest.done) iconRow.append("⚠");
+    if (quest.done) iconRow.append("✅");
+    if (iconRow.childNodes.length) card.appendChild(iconRow);
+
+    if (isExpanded) {
+      renderExpandedBlocks(card, quest, currentState, actions);
+    }
+
+    card.addEventListener("click", () => actions.toggleQuestCard(quest.id));
+    frag.appendChild(card);
+  });
+
+  if (currentState.ui.detailMode === "new") {
+    frag.appendChild(buildNewQuestCard(currentState, actions, selectedDate));
+  }
 
   dom.dayQuestList.appendChild(frag);
 }
@@ -396,7 +415,7 @@ function renderSubtasks(container, quest, currentState, actions) {
   container.innerHTML = "";
   const list = currentState.subtasks[quest.id] || [];
   const block = document.createElement("div");
-  block.className = "detail-block";
+  block.className = "detail-block expanded-block";
   const label = document.createElement("div");
   label.className = "detail-label";
   label.textContent = "Subtasks";
@@ -416,7 +435,8 @@ function renderSubtasks(container, quest, currentState, actions) {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = Boolean(item.done);
-      checkbox.addEventListener("change", () => {
+      checkbox.addEventListener("change", (event) => {
+        event.stopPropagation();
         item.done = checkbox.checked;
         const percent = Math.round((list.filter((i) => i.done).length / list.length) * 100);
         actions.updateQuest(quest.id, { completion: percent, done: percent === 100 });
@@ -434,7 +454,8 @@ function renderSubtasks(container, quest, currentState, actions) {
   addBtn.type = "button";
   addBtn.className = "link-button";
   addBtn.textContent = "+ Add subtask";
-  addBtn.addEventListener("click", () => {
+  addBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
     const text = prompt("New subtask");
     if (!text) return;
     const updated = [...list, { text, done: false }];
@@ -448,20 +469,21 @@ function renderSubtasks(container, quest, currentState, actions) {
 function renderProgressBlock(container, quest, actions) {
   const completion = Math.max(0, Math.min(100, Number(quest.completion) || 0));
   const block = document.createElement("div");
-  block.className = "detail-block";
+  block.className = "detail-block expanded-block";
   const label = document.createElement("div");
   label.className = "detail-label";
   label.textContent = "Progress";
   block.appendChild(label);
 
   const segments = document.createElement("div");
-  segments.className = "segment-group";
+  segments.className = "segment-group small";
   SEGMENTS.forEach((value) => {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = `segment ${value === completion ? "active" : ""}`;
     btn.textContent = `${value}%`;
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", (event) => {
+      event.stopPropagation();
       const done = quest.done && value === 100 ? true : value === 100;
       if (value < 100 && quest.done) {
         actions.updateQuest(quest.id, { completion: value, done: false });
@@ -473,32 +495,13 @@ function renderProgressBlock(container, quest, actions) {
   });
   block.appendChild(segments);
 
-  const sliderRow = document.createElement("div");
-  sliderRow.className = "progress-slider";
-  const slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = "0";
-  slider.max = "100";
-  slider.value = completion;
-  slider.addEventListener("input", () => {
-    const value = Number(slider.value);
-    value < 100 && quest.done
-      ? actions.updateQuest(quest.id, { completion: value, done: false })
-      : actions.updateQuest(quest.id, { completion: value, done: value === 100 });
-    valueLabel.textContent = `${value}%`;
-  });
-  const valueLabel = document.createElement("span");
-  valueLabel.className = "progress-value";
-  valueLabel.textContent = `${completion}%`;
-  sliderRow.append(slider, valueLabel);
-  block.appendChild(sliderRow);
-
   const doneRow = document.createElement("label");
   doneRow.className = "meta";
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = quest.done;
-  checkbox.addEventListener("change", () => {
+  checkbox.addEventListener("change", (event) => {
+    event.stopPropagation();
     const nextCompletion = checkbox.checked ? 100 : completion;
     actions.updateQuest(quest.id, { done: checkbox.checked, completion: nextCompletion });
   });
@@ -513,7 +516,7 @@ function renderProgressBlock(container, quest, actions) {
 
 function renderResources(container, quest) {
   const block = document.createElement("div");
-  block.className = "detail-block";
+  block.className = "detail-block expanded-block";
   const label = document.createElement("div");
   label.className = "detail-label";
   label.textContent = "Resources";
@@ -547,151 +550,122 @@ function renderResources(container, quest) {
   addBtn.type = "button";
   addBtn.className = "link-button";
   addBtn.textContent = "+ Add link/file";
+  addBtn.addEventListener("click", (event) => event.stopPropagation());
   block.append(chips, addBtn);
   container.appendChild(block);
 }
-function renderQuestDetail(dom, currentState, actions) {
-  if (!dom.questDetailPanel) return;
-  const selectedDate = currentState.ui.selectedDate || todayISO();
-  const questsForDay = currentState.quests.filter((q) => q.dueDate === selectedDate);
-  const selectedQuest =
-    questsForDay.find((q) => q.id === currentState.ui.selectedQuestId) || questsForDay[0] || null;
 
-  dom.questDetailPanel.innerHTML = "";
-
-  if (currentState.ui.detailMode === "new") {
-    const form = document.createElement("form");
-    form.className = "detail-block";
-    form.innerHTML = `
-      <div class="detail-label">New Quest for ${formatDateLong(selectedDate)}</div>
-      <label class="detail-block">
-        <span class="muted small">Course</span>
-        <select class="select" name="course">${currentState.courses
-          .map((c) => `<option value="${c}">${c}</option>`)
-          .join("")}</select>
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Quest title</span>
-        <input class="select" name="title" placeholder="Quest title" />
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Quest type</span>
-        <select class="select" name="type">
-          ${currentState.categories
-            .map((c) => `<option value="${c}">${c}</option>`)
-            .join("")}
-        </select>
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Due date</span>
-        <input class="select" type="date" name="dueDate" value="${selectedDate}" />
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Due time (optional)</span>
-        <input class="select" type="time" name="dueTime" />
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Estimated duration (hours)</span>
-        <input class="select" type="number" step="0.25" min="0" name="estHours" placeholder="e.g. 1.5" />
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Notes</span>
-        <textarea class="textarea" name="notes" placeholder="Add notes about this quest..."></textarea>
-      </label>
-      <label class="detail-block">
-        <span class="muted small">Resource link</span>
-        <input class="select" type="url" name="link" placeholder="https://example.com" />
-      </label>
-      <div class="panel-actions" style="justify-content: flex-end;">
-        <button type="button" class="link-button" data-role="cancel">Cancel</button>
-        <button type="submit" class="soft-button">Save quest</button>
-      </div>
-    `;
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const formData = new FormData(form);
-      const hours = Number(formData.get("estHours"));
-      const estMinutes = Number.isFinite(hours) ? Math.round(hours * 60) : null;
-      const payload = {
-        course: formData.get("course") || "General",
-        title: formData.get("title"),
-        category: formData.get("type") || formData.get("title") || "General",
-        dueDate: formData.get("dueDate") || selectedDate,
-        dueTime: formData.get("dueTime") || "",
-        estMinutes,
-        notes: formData.get("notes") || "",
-        link: formData.get("link") || "",
-        completion: 0,
-        done: false,
-      };
-      const saved = await actions.addQuest(payload);
-      if (saved) {
-        currentState.ui.detailMode = "view";
-        actions.focusDay(saved.dueDate || selectedDate);
-        actions.selectQuest(saved.id);
-      }
-    });
-    form.querySelector('[data-role="cancel"]').addEventListener("click", () => {
-      currentState.ui.detailMode = "view";
-      actions.focusDay(selectedDate);
-    });
-    dom.questDetailPanel.appendChild(form);
-    return;
-  }
-
-  if (!selectedQuest) {
-    dom.questDetailPanel.innerHTML =
-      '<div class="empty">Select a quest to see details or add a new one.</div>';
-    return;
-  }
-
-  const essentials = document.createElement("div");
-  essentials.className = "detail-block";
-  const title = document.createElement("div");
-  title.className = "detail-label";
-  title.textContent = `${selectedQuest.course || "Course"} / ${questTitle(selectedQuest)}`;
-  essentials.appendChild(title);
-
-  const chips = document.createElement("div");
-  chips.className = "chip-group";
-  const courseChip = document.createElement("span");
-  courseChip.className = "chip-badge";
-  courseChip.style.background = "#eef3ff";
-  courseChip.textContent = selectedQuest.course || "Course";
-  chips.appendChild(courseChip);
-  const due = document.createElement("span");
-  due.className = "muted small";
-  due.textContent = `${formatDue(selectedQuest.dueDate)} - ${dueTimeLabel(selectedQuest)}`;
-  chips.appendChild(due);
-  const type = document.createElement("span");
-  type.className = "chip-badge";
-  type.textContent = questType(selectedQuest);
-  chips.appendChild(type);
-  essentials.appendChild(chips);
-  dom.questDetailPanel.appendChild(essentials);
-
-  renderProgressBlock(dom.questDetailPanel, selectedQuest, actions);
-  renderSubtasks(dom.questDetailPanel, selectedQuest, currentState, actions);
-
-  const notes = document.createElement("div");
-  notes.className = "detail-block";
-  const notesLabel = document.createElement("div");
-  notesLabel.className = "detail-label";
-  notesLabel.textContent = "Notes";
-  const notesBox = document.createElement("div");
-  notesBox.className = "textarea";
-  notesBox.textContent = selectedQuest.notes || "Add notes about this quest...";
-  notes.append(notesLabel, notesBox);
-  dom.questDetailPanel.appendChild(notes);
-
-  renderResources(dom.questDetailPanel, selectedQuest);
-
-  const meta = document.createElement("div");
-  meta.className = "muted small";
-  meta.textContent = "Created recently - Last updated moments ago.";
-  dom.questDetailPanel.appendChild(meta);
+function renderNotesBlock(container, quest, actions) {
+  const block = document.createElement("div");
+  block.className = "detail-block expanded-block";
+  const label = document.createElement("div");
+  label.className = "detail-label";
+  label.textContent = "Notes";
+  const textarea = document.createElement("textarea");
+  textarea.className = "textarea";
+  textarea.placeholder = "Add notes about this quest...";
+  textarea.value = quest.notes || "";
+  textarea.addEventListener("click", (event) => event.stopPropagation());
+  textarea.addEventListener("blur", () => actions.updateQuest(quest.id, { notes: textarea.value }));
+  block.append(label, textarea);
+  container.appendChild(block);
 }
 
+function renderExpandedBlocks(card, quest, currentState, actions) {
+  renderProgressBlock(card, quest, actions);
+  renderSubtasks(card, quest, currentState, actions);
+  renderNotesBlock(card, quest, actions);
+  renderResources(card, quest);
+  const meta = document.createElement("div");
+  meta.className = "muted small expanded-block";
+  meta.textContent = "Created recently - Last updated moments ago.";
+  card.appendChild(meta);
+}
+
+function buildNewQuestCard(currentState, actions, selectedDate) {
+  const card = document.createElement("article");
+  card.className = "day-card selected";
+  const strip = document.createElement("div");
+  strip.className = "course-strip";
+  strip.style.background = courseColor("New");
+  card.appendChild(strip);
+
+  const form = document.createElement("form");
+  form.className = "detail-block expanded-block";
+  form.innerHTML = `
+    <div class="detail-label">New Quest</div>
+    <label class="detail-block">
+      <span class="muted small">Course</span>
+      <select class="select" name="course">${currentState.courses
+        .map((c) => `<option value="${c}">${c}</option>`)
+        .join("")}</select>
+    </label>
+    <label class="detail-block">
+      <span class="muted small">Quest title</span>
+      <input class="select" name="title" placeholder="Quest title" />
+    </label>
+    <label class="detail-block">
+      <span class="muted small">Quest type</span>
+      <select class="select" name="type">
+        ${currentState.categories.map((c) => `<option value="${c}">${c}</option>`).join("")}
+      </select>
+    </label>
+    <label class="detail-block">
+      <span class="muted small">Due time (optional)</span>
+      <input class="select" type="time" name="dueTime" />
+    </label>
+    <label class="detail-block">
+      <span class="muted small">Estimated duration (hours)</span>
+      <input class="select" type="number" step="0.25" min="0" name="estHours" placeholder="e.g. 1.5" />
+    </label>
+    <label class="detail-block">
+      <span class="muted small">Notes</span>
+      <textarea class="textarea" name="notes" placeholder="Add notes about this quest..."></textarea>
+    </label>
+    <label class="detail-block">
+      <span class="muted small">Resource link</span>
+      <input class="select" type="url" name="link" placeholder="https://example.com" />
+    </label>
+    <div class="panel-actions" style="justify-content: flex-end;">
+      <button type="button" class="link-button" data-role="cancel">Cancel</button>
+      <button type="submit" class="soft-button">Save</button>
+    </div>
+  `;
+
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const data = new FormData(form);
+    const hours = Number(data.get("estHours"));
+    const estMinutes = Number.isFinite(hours) ? Math.round(hours * 60) : null;
+    const payload = {
+      course: data.get("course") || "General",
+      title: data.get("title") || "",
+      category: data.get("type") || "General",
+      dueDate: selectedDate,
+      dueTime: data.get("dueTime") || "",
+      estMinutes,
+      notes: data.get("notes") || "",
+      link: data.get("link") || "",
+      completion: 0,
+      done: false,
+    };
+    const saved = await actions.addQuest(payload);
+    if (saved) {
+      currentState.ui.detailMode = "view";
+      actions.focusDay(saved.dueDate || selectedDate);
+      actions.selectQuest(saved.id);
+    }
+  });
+
+  form.querySelector('[data-role="cancel"]').addEventListener("click", (event) => {
+    event.stopPropagation();
+    actions.cancelNewQuest();
+  });
+  form.addEventListener("click", (event) => event.stopPropagation());
+  card.appendChild(form);
+  return card;
+}
 function renderDayPane(dom, currentState, actions) {
   const selectedDate = currentState.ui.selectedDate || todayISO();
   setText(dom.selectedDateLabel, formatDateLong(selectedDate));
@@ -702,7 +676,6 @@ function renderDayPane(dom, currentState, actions) {
 
   renderDayFilter(dom, currentState);
   renderDayList(dom, currentState, actions);
-  renderQuestDetail(dom, currentState, actions);
 }
 function renderCourseFilter(dom, currentState, actions) {
   if (!dom.courseFilterChips) return;

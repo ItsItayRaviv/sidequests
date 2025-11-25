@@ -79,6 +79,7 @@ export function ensureDefaults(current = state) {
   if (!current.ui.questFilters) {
     current.ui.questFilters = { courses: [], status: "All", sort: "date" };
   }
+  if (!current.ui.detailMode) current.ui.detailMode = "view";
   if (!current.subtasks) current.subtasks = {};
 }
 

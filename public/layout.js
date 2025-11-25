@@ -76,7 +76,6 @@ const layout = `
         </div>
         <div class="day-pane-body">
           <div class="day-list" id="dayQuestList"></div>
-          <div class="day-detail" id="questDetailPanel"></div>
         </div>
         <div class="day-pane-footer">
           <button id="addDayQuest" class="link-button">+ Add quest for this day</button>
@@ -204,7 +203,6 @@ function collectRefs(root) {
     daySummary: root.querySelector("#daySummary"),
     dayFilter: root.querySelector("#dayFilter"),
     dayQuestList: root.querySelector("#dayQuestList"),
-    questDetailPanel: root.querySelector("#questDetailPanel"),
     addDayQuest: root.querySelector("#addDayQuest"),
     questGroupList: root.querySelector("#questGroupList"),
     courseFilterChips: root.querySelector("#courseFilterChips"),

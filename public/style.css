@@ -491,7 +491,7 @@ button {
 
 .day-pane-body {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 12px;
   min-height: 320px;
 }
@@ -522,6 +522,7 @@ button {
 .day-card.selected {
   border-color: var(--accent);
   background: #f6f8ff;
+  box-shadow: 0 12px 26px rgba(25, 30, 40, 0.08);
 }
 
 .course-strip {
@@ -555,16 +556,17 @@ button {
 
 .icon-row {
   display: inline-flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
   color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .progress-line {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
+  display: flex;
+  gap: 6px;
   align-items: center;
+  font-size: 0.9rem;
 }
 
 .progress-slider {
@@ -632,6 +634,57 @@ button {
   gap: 10px;
 }
 
+.day-card .caret {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.day-card .inline-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.day-card .small-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.day-card .small-progress .progress-bar {
+  width: 90px;
+  background: #ececec;
+}
+
+.expanded-block {
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.segment-group.small {
+  padding: 2px;
+}
+
+.segment-group.small .segment {
+  padding: 6px 8px;
+  font-size: 0.9rem;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 10px;
+  font: inherit;
+}
+
 .detail-head {
   display: flex;
   justify-content: space-between;
@@ -689,6 +742,7 @@ button {
   padding: 6px 10px;
   border-radius: 10px;
   background: var(--pill);
+  color: var(--text);
 }
 
 .quest-groups {
