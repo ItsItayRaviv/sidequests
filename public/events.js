@@ -1,19 +1,36 @@
 import { renderApp } from "./render.js";
-import { state, addQuest, loadStateForUser, setSelectedDate } from "./state.js";
+import { state, addQuest, loadStateForUser, setSelectedDate, updateQuest } from "./state.js";
 import { signInWithGoogle } from "./auth.js";
 
 export function attachGlobalHandlers() {
-  document.addEventListener("click", async (event) => {
+  const handle = async (event) => {
     const actionTarget = event.target?.closest?.("[data-action]");
     if (!actionTarget) return;
 
     const action = actionTarget.dataset.action;
 
-    await handleAction(action, event, actionTarget);
+    // Live update label without re-render while dragging slider.
+    if (action === "quest-progress" && event.type === "input") {
+      syncProgressLabel(actionTarget);
+      return;
+    }
+
+    // Avoid double-handling range/checkbox clicks; use change/input instead.
+    if (event.type === "click" && (action === "quest-progress" || action === "toggle-quest")) {
+      return;
+    }
+
+    const shouldRender = await handleAction(action, event, actionTarget);
 
     // After any state change:
-    renderApp();
-  });
+    if (shouldRender !== false) {
+      renderApp();
+    }
+  };
+
+  document.addEventListener("click", handle);
+  document.addEventListener("input", handle);
+  document.addEventListener("change", handle);
 }
 
 async function handleAction(action, event, target) {
@@ -27,7 +44,12 @@ async function handleAction(action, event, target) {
     case "select-day":
       handleSelectDay(target);
       break;
-    // TODO v0.1: handle toggle-quest
+    case "toggle-quest":
+      await handleToggleQuest(target);
+      break;
+    case "quest-progress":
+      await handleQuestProgress(target);
+      break;
     // TODO v0.1: handle save-quest
     default:
       break;
@@ -89,4 +111,44 @@ function handleSelectDay(target) {
   const iso = target?.dataset?.day;
   if (!iso) return;
   setSelectedDate(iso);
+}
+
+async function handleToggleQuest(target) {
+  const questId = target?.dataset?.questId;
+  if (!questId) return;
+
+  const completed = !!target.checked;
+  const progress = completed ? 100 : 0;
+  const status = completed ? "completed" : "planned";
+
+  await updateQuest(questId, { status, progress });
+}
+
+async function handleQuestProgress(target) {
+  const questId = target?.dataset?.questId;
+  if (!questId) return;
+
+  const raw = Number(target.value);
+  if (Number.isNaN(raw)) return;
+
+  const progress = Math.min(100, Math.max(0, Math.round(raw)));
+  const quest = state.quests.find((q) => q.id === questId);
+  let status = quest?.status || "planned";
+
+  if (progress >= 100) {
+    status = "completed";
+  } else if (status === "completed") {
+    status = "planned";
+  }
+
+  await updateQuest(questId, { progress, status });
+}
+
+function syncProgressLabel(target) {
+  const value = Number(target.value);
+  if (Number.isNaN(value)) return;
+  const label = target.closest(".quest-card__progress")?.querySelector(".quest-card__progress-value");
+  if (label) {
+    label.textContent = `${value}%`;
+  }
 }

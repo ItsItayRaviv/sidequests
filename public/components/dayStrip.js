@@ -35,7 +35,9 @@ export function DayStrip(state) {
         .filter(Boolean)
         .join(" ");
 
-      const questCount = (state.quests || []).filter((q) => q.dueDate === day.iso).length;
+      const questCount = (state.quests || [])
+            .filter((q) => q.status !== 'completed')
+            .filter((q) => q.dueDate === day.iso).length;
       const questsLabel = questCount === 0 ? "no quests" 
         : questCount === 1 ? `${questCount} quest` 
         : `${questCount} quests`;

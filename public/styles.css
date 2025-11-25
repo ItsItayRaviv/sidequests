@@ -10,6 +10,7 @@
   --color-border: #d7d0c6;
 
   --color-emerald: #5bbf83;
+  --color-emerald-strong: #2d9858;
   --color-emerald-soft: #e1f7ec;
   --color-emerald-tint: rgba(91, 191, 131, 0.18);
 
@@ -247,7 +248,7 @@ a {
   --day-text: var(--color-text);
   --day-highlight-border: var(--color-emerald);
   --day-highlight-bg: var(--color-emerald-tint);
-  --day-highlight-text: var(--color-strong-heading);
+  --day-highlight-text: var(--color-strong-text);
 
   margin-bottom: 24px;
 }
@@ -391,4 +392,39 @@ a {
 
 .quest-card__status {
   text-transform: capitalize;
+}
+
+.quest-card__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.quest-card__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.quest-card__progress input[type="range"] {
+  flex: 1;
+  accent-color: var(--color-emerald-strong);
+}
+
+.quest-card__progress-value {
+  min-width: 42px;
+  text-align: right;
+  font-size: var(--font-size-sm);
+  color: var(--quest-quiet);
+}
+
+.quest-card__complete {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-size-sm);
+  color: var(--quest-quiet);
 }

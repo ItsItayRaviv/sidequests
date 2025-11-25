@@ -6,6 +6,8 @@ export function QuestList(state) {
 
   const items = questsForDay
     .map((q) => {
+      const progress = Number(q.progress) || 0;
+      const completed = q.status === "completed";
       return `
         <li class="quest-card">
           <div class="quest-card__row">
@@ -17,6 +19,28 @@ export function QuestList(state) {
               <div class="quest-card__date">${q.dueDate}</div>
               <div class="quest-card__status">${q.status}</div>
             </div>
+          </div>
+          <div class="quest-card__controls">
+            <label class="quest-card__progress">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value="${progress}"
+                data-action="quest-progress"
+                data-quest-id="${q.id}"
+              />
+              <span class="quest-card__progress-value">${progress}%</span>
+            </label>
+            <label class="quest-card__complete">
+              <input
+                type="checkbox"
+                data-action="toggle-quest"
+                data-quest-id="${q.id}"
+                ${completed ? "checked" : ""}
+              />
+              <span>Complete</span>
+            </label>
           </div>
         </li>
       `;

@@ -154,6 +154,7 @@ function questFromSnapshot(snap) {
     id: snap.id,
     title: data.title || "",
     status: data.status || "planned",
+    progress: Number(data.progress) || 0,
     dueDate: formatDateOnly(data.dueDate),
     estimatedMinutes: Number(data.estimatedMinutes) || 0,
     xp: Number(data.xp) || 0,

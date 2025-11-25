@@ -100,6 +100,7 @@ export function newQuestPayload(data = {}) {
     title: data.title ?? "",
     dueDate: data.dueDate ?? now,
     status: data.status ?? "planned",
+    progress: data.progress ?? 0,
     estimatedMinutes: data.estimatedMinutes ?? 0,
     xp: data.xp ?? 0,
     coins: data.coins ?? 0,
